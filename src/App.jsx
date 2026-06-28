@@ -94,7 +94,7 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
 
   return (
     <tr style={{ borderBottom: "1px solid #eee" }}>
-      <td style={{ padding: "10px 12px", minWidth: 200, position: "sticky", left: 0, background: "#fff", zIndex: 1 }}>
+      <td style={{ padding: "10px 12px", minWidth: 200 }}>
         <a
           href={exercise.link}
           target="_blank"
@@ -191,7 +191,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
           <thead>
             <tr style={{ background: "#f9fafb", borderBottom: "2px solid #e5e7eb" }}>
-              <th style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, color: "#374151", position: "sticky", left: 0, background: "#f9fafb", zIndex: 1 }}>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, color: "#374151" }}>
                 Exercițiu
               </th>
               {weekLabels.map((label, wi) => (
