@@ -175,7 +175,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange }) {
   );
 }
 
-function ClientView({ client, code, onLogout }) {
+function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
   const storageKey = `weights:${code}:${client.month}`;
   const [weights, setWeights, loaded] = useStorage(storageKey, {});
   const [savedFlash, setSavedFlash] = useState(false);
@@ -237,7 +237,7 @@ function ClientView({ client, code, onLogout }) {
               cursor: "pointer",
             }}
           >
-            <LogOut size={14} /> Deconectare
+            <LogOut size={14} /> {logoutLabel}
           </button>
         </div>
       </div>
@@ -263,8 +263,9 @@ function ClientView({ client, code, onLogout }) {
   );
 }
 
-function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus }) {
+function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus, onPreviewMonth }) {
   const [local, setLocal] = useState(clients);
+  const [previewMonth, setPreviewMonth] = useState(Object.keys(MONTHS_DATA)[0] || "1");
 
   useEffect(() => {
     setLocal(clients);
@@ -289,6 +290,8 @@ function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus }) {
     onClose();
   };
 
+  const sortedMonths = Object.keys(MONTHS_DATA).sort((a, b) => Number(a) - Number(b));
+
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 24, border: "1px solid #e5e7eb", borderRadius: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
@@ -296,6 +299,41 @@ function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus }) {
         <button onClick={onClose} style={{ border: "none", background: "none", color: "#6b7280", cursor: "pointer", fontSize: 13 }}>
           Înapoi
         </button>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          background: "#fff7f7",
+          border: "1px solid #f3d4d4",
+          borderRadius: 10,
+          padding: "10px 14px",
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ fontSize: 13, color: "#374151" }}>
+          Previzualizează o lună (fără cod de client)
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <select
+            value={previewMonth}
+            onChange={(e) => setPreviewMonth(e.target.value)}
+            style={{ border: "1px solid #d1d5db", borderRadius: 8, padding: "6px 10px", fontSize: 13 }}
+          >
+            {sortedMonths.map((m) => (
+              <option key={m} value={m}>Luna {m}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => onPreviewMonth(previewMonth)}
+            style={{ border: "none", background: RED, color: "#fff", borderRadius: 8, padding: "6px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+          >
+            Vezi
+          </button>
+        </div>
       </div>
 
       <div
@@ -400,6 +438,7 @@ export default function App() {
   const [activeCode, setActiveCode] = useState(null);
   const [error, setError] = useState("");
   const [showAdmin, setShowAdmin] = useState(false);
+  const [previewMonth, setPreviewMonth] = useState(null);
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | success | error
 
   const syncFromSheet = async () => {
@@ -437,6 +476,19 @@ export default function App() {
     }
   };
 
+  if (previewMonth) {
+    return (
+      <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", background: "#fff", minHeight: "100vh" }}>
+        <ClientView
+          client={{ name: `Previzualizare`, month: previewMonth }}
+          code={`__preview_${previewMonth}`}
+          onLogout={() => { setPreviewMonth(null); setShowAdmin(true); }}
+          logoutLabel="Înapoi la Admin"
+        />
+      </div>
+    );
+  }
+
   if (showAdmin) {
     return (
       <AdminPanel
@@ -445,6 +497,7 @@ export default function App() {
         onClose={() => setShowAdmin(false)}
         onSync={syncFromSheet}
         syncStatus={syncStatus}
+        onPreviewMonth={(m) => { setPreviewMonth(m); setShowAdmin(false); }}
       />
     );
   }
