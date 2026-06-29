@@ -116,15 +116,20 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
         const maxCols = maxColsPerWeek[wi];
         return Array.from({ length: maxCols }, (_, colIdx) => {
           const cell = week.cells[colIdx];
+          const cellKey = `${blockIdx}-${exIdx}-${wi}-${colIdx}`;
           if (!cell) {
             return (
               <td
                 key={`${wi}-${colIdx}`}
-                style={{ padding: "8px 4px", minWidth: 64, borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
-              />
+                style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "#d1d5db" }}>–</span>
+                  <WeightDropdown value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+                </div>
+              </td>
             );
           }
-          const cellKey = `${blockIdx}-${exIdx}-${wi}-${colIdx}`;
           const isAo = cell.type === "ao";
           const known = isKnownTerm(cell.label, glossary);
           return (
