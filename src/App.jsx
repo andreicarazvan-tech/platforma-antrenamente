@@ -85,31 +85,16 @@ function WeightDropdown({ value, onChange }) {
   );
 }
 
-function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTermClick, glossary, weekColOffsets, totalCols }) {
+function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTermClick, glossary, maxColsPerWeek }) {
   const isKnownTerm = (val) => {
     if (val == null) return false;
     const key = String(val).trim();
     return glossary && Object.keys(glossary).some((g) => g.toLowerCase() === key.toLowerCase());
   };
 
-  // Build a set of grid columns that are actually occupied by real cells
-  const occupied = new Set();
-  exercise.weeks.forEach((week, wi) => {
-    week.cells.forEach((_, colIdx) => {
-      occupied.add(weekColOffsets[wi] + colIdx + 2);
-    });
-  });
-
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `200px repeat(${totalCols}, 64px) 70px`,
-        borderBottom: "1px solid #eee",
-        alignItems: "stretch",
-      }}
-    >
-      <div style={{ padding: "10px 12px", display: "flex", alignItems: "center" }}>
+    <tr style={{ borderBottom: "1px solid #eee" }}>
+      <td style={{ padding: "10px 12px", minWidth: 200, whiteSpace: "nowrap" }}>
         <a
           href={exercise.link}
           target="_blank"
@@ -127,28 +112,27 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
           {exercise.name}
           <Play size={13} style={{ flexShrink: 0, opacity: 0.6 }} />
         </a>
-      </div>
-      {/* Invisible spacers for every unoccupied column, so the row physically spans totalCols */}
-      {Array.from({ length: totalCols }, (_, i) => i + 2)
-        .filter((col) => !occupied.has(col))
-        .map((col) => (
-          <div key={`spacer-${col}`} style={{ gridColumn: col }} />
-        ))}
-      {exercise.weeks.map((week, wi) =>
-        week.cells.map((cell, colIdx) => {
+      </td>
+      {exercise.weeks.map((week, wi) => {
+        const maxCols = maxColsPerWeek[wi];
+        return Array.from({ length: maxCols }, (_, colIdx) => {
+          const cell = week.cells[colIdx];
+          if (!cell) {
+            // Empty placeholder cell, visually identical to a normal cell but with no content
+            return (
+              <td
+                key={`${wi}-${colIdx}`}
+                style={{ padding: "8px 4px", minWidth: 64, borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
+              />
+            );
+          }
           const cellKey = `${blockIdx}-${exIdx}-${wi}-${colIdx}`;
           const isAo = cell.type === "ao";
           const known = isKnownTerm(cell.label);
-          const gridCol = weekColOffsets[wi] + colIdx + 2; // +2: 1 for name col, grid is 1-indexed
           return (
-            <div
+            <td
               key={`${wi}-${colIdx}`}
-              style={{
-                gridColumn: gridCol,
-                padding: "8px 4px",
-                textAlign: "center",
-                borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none",
-              }}
+              style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
                 {known ? (
@@ -177,25 +161,14 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
                   onChange={(v) => onWeightChange(cellKey, v)}
                 />
               </div>
-            </div>
+            </td>
           );
-        })
-      )}
-      <div
-        style={{
-          gridColumn: totalCols + 2,
-          padding: "8px 12px",
-          textAlign: "center",
-          fontSize: 12,
-          color: "#6b7280",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+        });
+      })}
+      <td style={{ padding: "8px 12px", minWidth: 70, textAlign: "center", fontSize: 12, color: "#6b7280" }}>
         {exercise.pauza || "–"}
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
@@ -207,15 +180,6 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
   const maxColsPerWeek = Array.from({ length: numWeeks }, (_, wi) =>
     Math.max(1, ...block.exercises.map((ex) => ex.weeks?.[wi]?.cells?.length || 0))
   );
-
-  // Column offset where each week starts (0-indexed, relative to first data column)
-  const weekColOffsets = [];
-  let acc = 0;
-  for (let wi = 0; wi < numWeeks; wi++) {
-    weekColOffsets.push(acc);
-    acc += maxColsPerWeek[wi];
-  }
-  const totalCols = acc;
 
   return (
     <div style={{ marginBottom: 28, border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden" }}>
@@ -232,52 +196,40 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
         {block.day}
       </div>
       <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 620 }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: `200px repeat(${totalCols}, 64px) 70px`,
-              background: "#f9fafb",
-              borderBottom: "2px solid #e5e7eb",
-            }}
-          >
-            <div style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, color: "#374151", display: "flex", alignItems: "center" }}>
-              Exercițiu
-            </div>
-            {weekLabels.map((label, wi) => (
-              <div
-                key={wi}
-                style={{
-                  gridColumn: `${weekColOffsets[wi] + 2} / span ${maxColsPerWeek[wi]}`,
-                  padding: "8px 4px",
-                  fontSize: 12,
-                  color: "#374151",
-                  borderLeft: "2px solid #e5e7eb",
-                  textAlign: "center",
-                }}
-              >
-                {label}
-              </div>
+        <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "auto" }}>
+          <thead>
+            <tr style={{ background: "#f9fafb", borderBottom: "2px solid #e5e7eb" }}>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, color: "#374151", minWidth: 200, whiteSpace: "nowrap" }}>
+                Exercițiu
+              </th>
+              {weekLabels.map((label, wi) => (
+                <th
+                  key={wi}
+                  colSpan={maxColsPerWeek[wi]}
+                  style={{ padding: "8px 4px", fontSize: 12, color: "#374151", borderLeft: "2px solid #e5e7eb", textAlign: "center" }}
+                >
+                  {label}
+                </th>
+              ))}
+              <th style={{ padding: "8px 12px", fontSize: 12, color: "#374151", minWidth: 70 }}>Pauză</th>
+            </tr>
+          </thead>
+          <tbody>
+            {block.exercises.map((ex, exIdx) => (
+              <ExerciseRow
+                key={exIdx}
+                exercise={ex}
+                exIdx={exIdx}
+                blockIdx={blockIdx}
+                weights={weights}
+                onWeightChange={onWeightChange}
+                onTermClick={onTermClick}
+                glossary={glossary}
+                maxColsPerWeek={maxColsPerWeek}
+              />
             ))}
-            <div style={{ padding: "8px 12px", fontSize: 12, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              Pauză
-            </div>
-          </div>
-          {block.exercises.map((ex, exIdx) => (
-            <ExerciseRow
-              key={exIdx}
-              exercise={ex}
-              exIdx={exIdx}
-              blockIdx={blockIdx}
-              weights={weights}
-              onWeightChange={onWeightChange}
-              onTermClick={onTermClick}
-              glossary={glossary}
-              weekColOffsets={weekColOffsets}
-              totalCols={totalCols}
-            />
-          ))}
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );
