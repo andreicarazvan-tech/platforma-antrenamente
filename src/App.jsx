@@ -92,6 +92,14 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
     return glossary && Object.keys(glossary).some((g) => g.toLowerCase() === key.toLowerCase());
   };
 
+  // Build a set of grid columns that are actually occupied by real cells
+  const occupied = new Set();
+  exercise.weeks.forEach((week, wi) => {
+    week.cells.forEach((_, colIdx) => {
+      occupied.add(weekColOffsets[wi] + colIdx + 2);
+    });
+  });
+
   return (
     <div
       style={{
@@ -120,6 +128,12 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
           <Play size={13} style={{ flexShrink: 0, opacity: 0.6 }} />
         </a>
       </div>
+      {/* Invisible spacers for every unoccupied column, so the row physically spans totalCols */}
+      {Array.from({ length: totalCols }, (_, i) => i + 2)
+        .filter((col) => !occupied.has(col))
+        .map((col) => (
+          <div key={`spacer-${col}`} style={{ gridColumn: col }} />
+        ))}
       {exercise.weeks.map((week, wi) =>
         week.cells.map((cell, colIdx) => {
           const cellKey = `${blockIdx}-${exIdx}-${wi}-${colIdx}`;
