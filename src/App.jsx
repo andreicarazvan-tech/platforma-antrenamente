@@ -90,94 +90,90 @@ function isKnownTerm(val, glossary) {
   return glossary && Object.keys(glossary).some((g) => g.toLowerCase() === key.toLowerCase());
 }
 
-function Cell({ cell, cellKey, weights, onWeightChange, onTermClick, glossary }) {
-  const isAo = cell.type === "ao";
-  const known = isKnownTerm(cell.label, glossary);
+function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTermClick, glossary, maxColsPerWeek }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center", minWidth: 60 }}>
-      {known ? (
-        <button
-          onClick={() => onTermClick(cell.label)}
+    <tr style={{ borderBottom: "1px solid #eee" }}>
+      <td style={{ padding: "10px 12px", minWidth: 200, whiteSpace: "nowrap" }}>
+        <a
+          href={exercise.link}
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
-            fontSize: 11,
-            color: RED,
-            fontWeight: 700,
-            background: "none",
-            border: "none",
-            textDecoration: "underline",
-            cursor: "pointer",
-            padding: 0,
+            color: "#1d4ed8",
+            textDecoration: "none",
+            fontWeight: 600,
+            fontSize: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          {cell.label}
-        </button>
-      ) : (
-        <span style={{ fontSize: 11, color: isAo ? RED : "#6b7280", fontWeight: isAo ? 700 : 400 }}>
-          {cell.label}
-        </span>
-      )}
-      <WeightDropdown value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
-    </div>
-  );
-}
-
-function ExerciseCard({ exercise, exIdx, blockIdx, weekLabels, weights, onWeightChange, onTermClick, glossary }) {
-  return (
-    <div style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
-      <a
-        href={exercise.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: "#1d4ed8",
-          textDecoration: "none",
-          fontWeight: 600,
-          fontSize: 14,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "0 12px 10px",
-        }}
-      >
-        {exercise.name}
-        <Play size={13} style={{ flexShrink: 0, opacity: 0.6 }} />
-      </a>
-      <div style={{ display: "flex", overflowX: "auto", padding: "0 12px" }}>
-        {exercise.weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flexDirection: "column", marginRight: 14 }}>
-            <div style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", marginBottom: 6, fontWeight: 600 }}>
-              {weekLabels[wi]}
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {week.cells.map((cell, colIdx) => (
-                <Cell
-                  key={colIdx}
-                  cell={cell}
-                  cellKey={`${blockIdx}-${exIdx}-${wi}-${colIdx}`}
-                  weights={weights}
-                  onWeightChange={onWeightChange}
-                  onTermClick={onTermClick}
-                  glossary={glossary}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-        <div style={{ display: "flex", flexDirection: "column", marginLeft: 4 }}>
-          <div style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", marginBottom: 6, fontWeight: 600 }}>
-            Pauză
-          </div>
-          <div style={{ fontSize: 12, color: "#6b7280", textAlign: "center", paddingTop: 6 }}>
-            {exercise.pauza || "–"}
-          </div>
-        </div>
-      </div>
-    </div>
+          {exercise.name}
+          <Play size={13} style={{ flexShrink: 0, opacity: 0.6 }} />
+        </a>
+      </td>
+      {exercise.weeks.map((week, wi) => {
+        const maxCols = maxColsPerWeek[wi];
+        return Array.from({ length: maxCols }, (_, colIdx) => {
+          const cell = week.cells[colIdx];
+          if (!cell) {
+            return (
+              <td
+                key={`${wi}-${colIdx}`}
+                style={{ padding: "8px 4px", minWidth: 64, borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
+              />
+            );
+          }
+          const cellKey = `${blockIdx}-${exIdx}-${wi}-${colIdx}`;
+          const isAo = cell.type === "ao";
+          const known = isKnownTerm(cell.label, glossary);
+          return (
+            <td
+              key={`${wi}-${colIdx}`}
+              style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+                {known ? (
+                  <button
+                    onClick={() => onTermClick(cell.label)}
+                    style={{
+                      fontSize: 11,
+                      color: RED,
+                      fontWeight: 700,
+                      background: "none",
+                      border: "none",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    {cell.label}
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 11, color: isAo ? RED : "#6b7280", fontWeight: isAo ? 700 : 400 }}>
+                    {cell.label}
+                  </span>
+                )}
+                <WeightDropdown value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+              </div>
+            </td>
+          );
+        });
+      })}
+      <td style={{ padding: "8px 12px", minWidth: 70, textAlign: "center", fontSize: 12, color: "#6b7280" }}>
+        {exercise.pauza || "–"}
+      </td>
+    </tr>
   );
 }
 
 function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, glossary }) {
   const weekLabels = block.week_labels || ["Sapt1", "Sapt2", "Sapt3", "Sapt4"];
+  const numWeeks = weekLabels.length;
+
+  const maxColsPerWeek = Array.from({ length: numWeeks }, (_, wi) =>
+    Math.max(1, ...block.exercises.map((ex) => ex.weeks?.[wi]?.cells?.length || 0))
+  );
 
   return (
     <div style={{ marginBottom: 28, border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden" }}>
@@ -193,20 +189,41 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
       >
         {block.day}
       </div>
-      <div>
-        {block.exercises.map((ex, exIdx) => (
-          <ExerciseCard
-            key={exIdx}
-            exercise={ex}
-            exIdx={exIdx}
-            blockIdx={blockIdx}
-            weekLabels={weekLabels}
-            weights={weights}
-            onWeightChange={onWeightChange}
-            onTermClick={onTermClick}
-            glossary={glossary}
-          />
-        ))}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "auto" }}>
+          <thead>
+            <tr style={{ background: "#f9fafb", borderBottom: "2px solid #e5e7eb" }}>
+              <th style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, color: "#374151", minWidth: 200, whiteSpace: "nowrap" }}>
+                Exercițiu
+              </th>
+              {weekLabels.map((label, wi) => (
+                <th
+                  key={wi}
+                  colSpan={maxColsPerWeek[wi]}
+                  style={{ padding: "8px 4px", fontSize: 12, color: "#374151", borderLeft: "2px solid #e5e7eb", textAlign: "center" }}
+                >
+                  {label}
+                </th>
+              ))}
+              <th style={{ padding: "8px 12px", fontSize: 12, color: "#374151", minWidth: 70 }}>Pauză</th>
+            </tr>
+          </thead>
+          <tbody>
+            {block.exercises.map((ex, exIdx) => (
+              <ExerciseRow
+                key={exIdx}
+                exercise={ex}
+                exIdx={exIdx}
+                blockIdx={blockIdx}
+                weights={weights}
+                onWeightChange={onWeightChange}
+                onTermClick={onTermClick}
+                glossary={glossary}
+                maxColsPerWeek={maxColsPerWeek}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
