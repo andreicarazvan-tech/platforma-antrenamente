@@ -14,6 +14,33 @@ const MONTHS_DATA = {"5": {"month": 5, "blocks": [{"day": "Piept/umeri/biceps", 
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOJ5YX6giZWHAzl5vnsLRdEmoNgiCWmb6FUlRYSL5UbaFU9mo2JleW7Bo2jn5Wl0CrXjElUovcr5h_/pub?output=csv";
 
+const HISTORY_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyIEPtp2bCoYGN0RLvPmQ8PTu-tjrC2Za6FG7wsQ1V0e6W07mqGPojJjAJ8g3YMk2Tx0Q/exec";
+
+const HISTORY_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQhMLcwtjjuIooQdRJiT_x5KEQiiApObEmipjtck_rC6ddlGuN2gEOzHA779U2UTx0KLYxhwXzDFP7e/pub?output=csv";
+
+function parseHistoryCsv(csvText) {
+  const lines = csvText.split(/\r?\n/).filter((l) => l.trim() !== "");
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+  const idx = (name) => headers.indexOf(name);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",");
+    rows.push({
+      cod_client: (cols[idx("cod_client")] || "").trim(),
+      luna: (cols[idx("luna")] || "").trim(),
+      exercitiu: (cols[idx("exercitiu")] || "").trim(),
+      saptamana: (cols[idx("saptamana")] || "").trim(),
+      serie: (cols[idx("serie")] || "").trim(),
+      greutate: (cols[idx("greutate")] || "").trim(),
+      data: (cols[idx("data")] || "").trim(),
+    });
+  }
+  return rows;
+}
+
 function parseClientsCsv(csvText) {
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim() !== "");
   if (lines.length < 2) return {};
@@ -396,6 +423,29 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
     await setWeights(updated);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1200);
+
+    // Send to history log (best-effort, doesn't block UI)
+    try {
+      const [blockIdx, exIdx, wi, colIdx] = cellKey.split("-").map(Number);
+      const block = monthData.blocks[blockIdx];
+      const exercise = block?.exercises?.[exIdx];
+      const weekLabels = block?.week_labels || ["Sapt1", "Sapt2", "Sapt3", "Sapt4"];
+      if (exercise) {
+        fetch(HISTORY_SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            cod_client: code,
+            luna: client.month,
+            exercitiu: exercise.name,
+            saptamana: weekLabels[wi] || `Sapt${wi + 1}`,
+            serie: colIdx + 1,
+            greutate: value,
+          }),
+        }).catch(() => {});
+      }
+    } catch (e) {
+      // ignore history logging errors, never block the user's save
+    }
   };
 
   if (!monthData) {
@@ -496,10 +546,27 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
 function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus, onPreviewMonth }) {
   const [local, setLocal] = useState(clients);
   const [previewMonth, setPreviewMonth] = useState(Object.keys(MONTHS_DATA)[0] || "1");
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyClient, setHistoryClient] = useState("");
+  const [historyRows, setHistoryRows] = useState([]);
+  const [historyStatus, setHistoryStatus] = useState("idle");
 
   useEffect(() => {
     setLocal(clients);
   }, [clients]);
+
+  const loadHistory = async () => {
+    setHistoryStatus("loading");
+    try {
+      const res = await fetch(HISTORY_CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("fetch failed");
+      const text = await res.text();
+      setHistoryRows(parseHistoryCsv(text));
+      setHistoryStatus("success");
+    } catch (e) {
+      setHistoryStatus("error");
+    }
+  };
 
   const updateClient = (code, field, value) => {
     setLocal({ ...local, [code]: { ...local[code], [field]: value } });
@@ -564,6 +631,79 @@ function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus, onP
             Vezi
           </button>
         </div>
+      </div>
+
+      <div
+        style={{
+          background: "#f7faff",
+          border: "1px solid #d4e0f3",
+          borderRadius: 10,
+          padding: "10px 14px",
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ fontSize: 13, color: "#374151" }}>Istoric greutăți client</div>
+          <button
+            onClick={() => {
+              const next = !showHistory;
+              setShowHistory(next);
+              if (next && historyRows.length === 0) loadHistory();
+            }}
+            style={{ border: "1px solid #d1d5db", background: "#fff", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}
+          >
+            {showHistory ? "Ascunde" : "Vezi istoric"}
+          </button>
+        </div>
+        {showHistory && (
+          <div style={{ marginTop: 12 }}>
+            <select
+              value={historyClient}
+              onChange={(e) => setHistoryClient(e.target.value)}
+              style={{ border: "1px solid #d1d5db", borderRadius: 8, padding: "6px 10px", fontSize: 13, marginBottom: 10, width: "100%" }}
+            >
+              <option value="">Alege un client...</option>
+              {Object.keys(local).map((code) => (
+                <option key={code} value={code}>
+                  {code} — {local[code].name}
+                </option>
+              ))}
+            </select>
+            {historyStatus === "loading" && <div style={{ fontSize: 12, color: "#9ca3af" }}>Se încarcă...</div>}
+            {historyStatus === "error" && <div style={{ fontSize: 12, color: "#dc2626" }}>Eroare la încărcare.</div>}
+            {historyStatus === "success" && historyClient && (
+              <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                      <th style={{ textAlign: "left", padding: "4px 6px" }}>Lună</th>
+                      <th style={{ textAlign: "left", padding: "4px 6px" }}>Exercițiu</th>
+                      <th style={{ textAlign: "left", padding: "4px 6px" }}>Săpt.</th>
+                      <th style={{ textAlign: "left", padding: "4px 6px" }}>Serie</th>
+                      <th style={{ textAlign: "left", padding: "4px 6px" }}>Kg</th>
+                      <th style={{ textAlign: "left", padding: "4px 6px" }}>Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyRows
+                      .filter((r) => r.cod_client.toUpperCase() === historyClient.toUpperCase())
+                      .reverse()
+                      .map((r, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                          <td style={{ padding: "4px 6px" }}>{r.luna}</td>
+                          <td style={{ padding: "4px 6px" }}>{r.exercitiu}</td>
+                          <td style={{ padding: "4px 6px" }}>{r.saptamana}</td>
+                          <td style={{ padding: "4px 6px" }}>{r.serie}</td>
+                          <td style={{ padding: "4px 6px", fontWeight: 600 }}>{r.greutate}</td>
+                          <td style={{ padding: "4px 6px", color: "#9ca3af" }}>{r.data?.slice(0, 10)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div
