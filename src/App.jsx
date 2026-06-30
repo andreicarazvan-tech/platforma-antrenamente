@@ -90,6 +90,100 @@ function isKnownTerm(val, glossary) {
   return glossary && Object.keys(glossary).some((g) => g.toLowerCase() === key.toLowerCase());
 }
 
+function parsePauzaSeconds(pauzaStr) {
+  if (!pauzaStr) return null;
+  const s = String(pauzaStr).trim().toLowerCase().replace(",", ".");
+  const mMatch = s.match(/^([\d.]+)\s*m$/);
+  if (mMatch) return Math.round(parseFloat(mMatch[1]) * 60);
+  const sMatch = s.match(/^([\d.]+)\s*s$/);
+  if (sMatch) return Math.round(parseFloat(sMatch[1]));
+  return null;
+}
+
+function PauzaTimer({ pauza }) {
+  const totalSeconds = parsePauzaSeconds(pauza);
+  const [remaining, setRemaining] = useState(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (remaining === null) return;
+    if (remaining <= 0) {
+      setDone(true);
+      if (navigator.vibrate) {
+        navigator.vibrate([300, 100, 300]);
+      }
+      const resetTimer = setTimeout(() => {
+        setRemaining(null);
+        setDone(false);
+      }, 2000);
+      return () => clearTimeout(resetTimer);
+    }
+    const t = setTimeout(() => setRemaining(remaining - 1), 1000);
+    return () => clearTimeout(t);
+  }, [remaining]);
+
+  if (totalSeconds == null) {
+    return <span style={{ fontSize: 12, color: "#6b7280" }}>{pauza || "–"}</span>;
+  }
+
+  const start = () => {
+    setDone(false);
+    setRemaining(totalSeconds);
+  };
+
+  if (remaining === null) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+        <span style={{ fontSize: 12, color: "#6b7280" }}>{pauza}</span>
+        <button
+          onClick={start}
+          style={{
+            border: "1px solid #d1d5db",
+            background: "#fff",
+            borderRadius: 6,
+            padding: "2px 8px",
+            fontSize: 10,
+            color: RED,
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Start
+        </button>
+      </div>
+    );
+  }
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const display = `${mins}:${String(secs).padStart(2, "0")}`;
+
+  return (
+    <div
+      onClick={start}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        cursor: "pointer",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: done ? "#16a34a" : RED,
+          animation: done ? "pulse 0.8s infinite" : "none",
+        }}
+      >
+        {done ? "Gata!" : display}
+      </span>
+      <span style={{ fontSize: 9, color: "#9ca3af" }}>{done ? "" : "anulează"}</span>
+    </div>
+  );
+}
+
 function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTermClick, glossary, maxColsPerWeek }) {
   return (
     <tr style={{ borderBottom: "1px solid #eee" }}>
@@ -165,8 +259,8 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
           );
         });
       })}
-      <td style={{ padding: "8px 12px", minWidth: 70, textAlign: "center", fontSize: 12, color: "#6b7280" }}>
-        {exercise.pauza || "–"}
+      <td style={{ padding: "8px 12px", minWidth: 80, textAlign: "center" }}>
+        <PauzaTimer pauza={exercise.pauza} />
       </td>
     </tr>
   );
@@ -314,6 +408,12 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 60px" }}>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
       <GlossaryModal term={activeTerm} glossary={glossary} onClose={() => setActiveTerm(null)} />
       <div
         style={{
