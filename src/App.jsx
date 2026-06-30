@@ -433,6 +433,7 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
       if (exercise) {
         fetch(HISTORY_SCRIPT_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             cod_client: code,
             luna: client.month,
@@ -441,7 +442,9 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
             serie: colIdx + 1,
             greutate: value,
           }),
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error("History log failed:", err);
+        });
       }
     } catch (e) {
       // ignore history logging errors, never block the user's save
