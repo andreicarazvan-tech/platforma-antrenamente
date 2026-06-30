@@ -15,7 +15,7 @@ const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOJ5YX6giZWHAzl5vnsLRdEmoNgiCWmb6FUlRYSL5UbaFU9mo2JleW7Bo2jn5Wl0CrXjElUovcr5h_/pub?output=csv";
 
 const HISTORY_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyIEPtp2bCoYGN0RLvPmQ8PTu-tjrC2Za6FG7wsQ1V0e6W07mqGPojJjAJ8g3YMk2Tx0Q/exec";
+  "https://script.google.com/macros/s/AKfycbyzBeAYRdwbbKQ7_ZMwZSyYoemLHv--r4vAkmY93zE3UX5D_B12wtcHp90b-SU7ceUtFw/exec";
 
 const HISTORY_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQhMLcwtjjuIooQdRJiT_x5KEQiiApObEmipjtck_rC6ddlGuN2gEOzHA779U2UTx0KLYxhwXzDFP7e/pub?output=csv";
