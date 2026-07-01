@@ -431,20 +431,17 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
       const exercise = block?.exercises?.[exIdx];
       const weekLabels = block?.week_labels || ["Sapt1", "Sapt2", "Sapt3", "Sapt4"];
       if (exercise) {
-        fetch(HISTORY_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            cod_client: code,
-            luna: client.month,
-            exercitiu: exercise.name,
-            saptamana: weekLabels[wi] || `Sapt${wi + 1}`,
-            serie: colIdx + 1,
-            greutate: value,
-          }),
-        }).catch((err) => {
-          console.error("History log failed:", err);
+        const params = new URLSearchParams({
+          action: "write",
+          cod_client: code,
+          luna: client.month,
+          exercitiu: exercise.name,
+          saptamana: weekLabels[wi] || `Sapt${wi + 1}`,
+          serie: String(colIdx + 1),
+          greutate: String(value),
         });
+        fetch(`${HISTORY_SCRIPT_URL}?${params.toString()}`, { method: "GET" })
+          .catch((err) => { console.error("History log failed:", err); });
       }
     } catch (e) {
       // ignore history logging errors, never block the user's save
@@ -561,10 +558,10 @@ function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus, onP
   const loadHistory = async () => {
     setHistoryStatus("loading");
     try {
-      const res = await fetch(HISTORY_SCRIPT_URL, { cache: "no-store" });
+      const res = await fetch(HISTORY_CSV_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("fetch failed");
-      const rows = await res.json();
-      setHistoryRows(rows);
+      const text = await res.text();
+      setHistoryRows(parseHistoryCsv(text));
       setHistoryStatus("success");
     } catch (e) {
       setHistoryStatus("error");
