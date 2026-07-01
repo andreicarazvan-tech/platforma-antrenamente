@@ -15,7 +15,7 @@ const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOJ5YX6giZWHAzl5vnsLRdEmoNgiCWmb6FUlRYSL5UbaFU9mo2JleW7Bo2jn5Wl0CrXjElUovcr5h_/pub?output=csv";
 
 const HISTORY_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyzBeAYRdwbbKQ7_ZMwZSyYoemLHv--r4vAkmY93zE3UX5D_B12wtcHp90b-SU7ceUtFw/exec";
+  "https://script.google.com/macros/s/AKfycbwCzVVGKgD8t1y2QrJMx_kwMRfZ46DpoxTF0omQEfh0FjvijulNQRMPB05MmoChzgGNgQ/exec";
 
 const HISTORY_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQhMLcwtjjuIooQdRJiT_x5KEQiiApObEmipjtck_rC6ddlGuN2gEOzHA779U2UTx0KLYxhwXzDFP7e/pub?output=csv";
@@ -561,10 +561,10 @@ function AdminPanel({ clients, onUpdateClients, onClose, onSync, syncStatus, onP
   const loadHistory = async () => {
     setHistoryStatus("loading");
     try {
-      const res = await fetch(HISTORY_CSV_URL, { cache: "no-store" });
+      const res = await fetch(HISTORY_SCRIPT_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("fetch failed");
-      const text = await res.text();
-      setHistoryRows(parseHistoryCsv(text));
+      const rows = await res.json();
+      setHistoryRows(rows);
       setHistoryStatus("success");
     } catch (e) {
       setHistoryStatus("error");
