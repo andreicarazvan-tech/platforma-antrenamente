@@ -431,17 +431,18 @@ function ClientView({ client, code, onLogout, logoutLabel = "Deconectare" }) {
       const exercise = block?.exercises?.[exIdx];
       const weekLabels = block?.week_labels || ["Sapt1", "Sapt2", "Sapt3", "Sapt4"];
       if (exercise) {
-        const params = new URLSearchParams({
-          action: "write",
-          cod_client: code,
-          luna: client.month,
-          exercitiu: exercise.name,
-          saptamana: weekLabels[wi] || `Sapt${wi + 1}`,
-          serie: String(colIdx + 1),
-          greutate: String(value),
-        });
-        fetch(`${HISTORY_SCRIPT_URL}?${params.toString()}`, { method: "GET" })
-          .catch((err) => { console.error("History log failed:", err); });
+        fetch("/api/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cod_client: code,
+            luna: client.month,
+            exercitiu: exercise.name,
+            saptamana: weekLabels[wi] || `Sapt${wi + 1}`,
+            serie: colIdx + 1,
+            greutate: value,
+          }),
+        }).catch((err) => { console.error("History log failed:", err); });
       }
     } catch (e) {
       // ignore history logging errors, never block the user's save
