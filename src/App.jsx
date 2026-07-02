@@ -337,9 +337,10 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
 
   const renderCells = (ex, exIdx, wi) => {
     const maxCols = maxColsPerWeek[wi];
+    const uniqueExKey = `${blockIdx}-${exIdx}`;
     return Array.from({ length: maxCols }, (_, colIdx) => {
       const cell = ex.weeks[wi]?.cells[colIdx];
-      const cellKey = `${blockIdx}-${exIdx}-${wi}-${colIdx}`;
+      const cellKey = `${uniqueExKey}-${wi}-${colIdx}`;
       if (!cell) {
         return (
           <td key={`${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
@@ -1055,7 +1056,14 @@ export default function App() {
         </button>
 
         <button
-          onClick={() => setShowAdmin(true)}
+          onClick={() => {
+            const pwd = window.prompt("Introduceți parola de admin:");
+            if (pwd === "RAZVAN2024ADMIN") {
+              setShowAdmin(true);
+            } else if (pwd !== null) {
+              window.alert("Parolă incorectă.");
+            }
+          }}
           style={{
             width: "100%",
             marginTop: 16,
