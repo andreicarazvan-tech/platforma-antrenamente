@@ -89,8 +89,8 @@ function useStorage(key, initial) {
 function WeightDropdown({ value, onChange, cellKey }) {
   return (
     <select
-      key={cellKey}
-      defaultValue={value || ""}
+      id={cellKey}
+      name={cellKey}
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       style={{
@@ -248,7 +248,16 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
                   <span style={{ fontSize: 11, color: "#d1d5db" }}>–</span>
-                  <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+                  <select
+                    id={cellKey}
+                    name={cellKey}
+                    value={weights?.[cellKey] || ""}
+                    onChange={(e) => onWeightChange(cellKey, e.target.value)}
+                    style={{ border: "1px solid #d1d5db", borderRadius: 6, padding: "4px 2px", fontSize: 12, width: 56, background: "#fff", color: weights?.[cellKey] ? "#111" : "#9ca3af" }}
+                  >
+                    <option value="">–</option>
+                    {KG_OPTIONS.map((kg) => (<option key={kg} value={kg}>{kg}</option>))}
+                  </select>
                 </div>
               </td>
             );
@@ -287,7 +296,16 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
                   </span>
                 )}
                 {!isTerm && !isSkip && (
-                  <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+                  <select
+                    id={cellKey}
+                    name={cellKey}
+                    value={weights?.[cellKey] || ""}
+                    onChange={(e) => onWeightChange(cellKey, e.target.value)}
+                    style={{ border: "1px solid #d1d5db", borderRadius: 6, padding: "4px 2px", fontSize: 12, width: 56, background: "#fff", color: weights?.[cellKey] ? "#111" : "#9ca3af" }}
+                  >
+                    <option value="">–</option>
+                    {KG_OPTIONS.map((kg) => (<option key={kg} value={kg}>{kg}</option>))}
+                  </select>
                 )}
               </div>
             </td>
@@ -348,7 +366,16 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
           <td key={`${uniqueExKey}-${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
               <span style={{ fontSize: 11, color: "#d1d5db" }}>–</span>
-              <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+              <select
+                    id={cellKey}
+                    name={cellKey}
+                    value={weights?.[cellKey] || ""}
+                    onChange={(e) => onWeightChange(cellKey, e.target.value)}
+                    style={{ border: "1px solid #d1d5db", borderRadius: 6, padding: "4px 2px", fontSize: 12, width: 56, background: "#fff", color: weights?.[cellKey] ? "#111" : "#9ca3af" }}
+                  >
+                    <option value="">–</option>
+                    {KG_OPTIONS.map((kg) => (<option key={kg} value={kg}>{kg}</option>))}
+                  </select>
             </div>
           </td>
         );
@@ -372,7 +399,16 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
               </span>
             )}
             {!isTerm && !isSkip && (
-              <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+              <select
+                    id={cellKey}
+                    name={cellKey}
+                    value={weights?.[cellKey] || ""}
+                    onChange={(e) => onWeightChange(cellKey, e.target.value)}
+                    style={{ border: "1px solid #d1d5db", borderRadius: 6, padding: "4px 2px", fontSize: 12, width: 56, background: "#fff", color: weights?.[cellKey] ? "#111" : "#9ca3af" }}
+                  >
+                    <option value="">–</option>
+                    {KG_OPTIONS.map((kg) => (<option key={kg} value={kg}>{kg}</option>))}
+                  </select>
             )}
           </div>
         </td>
@@ -433,7 +469,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
               }
               return (
                 <ExerciseRow
-                  key={rowIdx}
+                  key={`${blockIdx}-${row.startIdx}`}
                   exercise={row.ex}
                   exIdx={row.startIdx}
                   blockIdx={blockIdx}
