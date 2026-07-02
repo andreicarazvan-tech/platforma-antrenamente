@@ -241,7 +241,7 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
           if (!cell) {
             return (
               <td
-                key={`${wi}-${colIdx}`}
+                key={`${blockIdx}-${exIdx}-${wi}-${colIdx}`}
                 style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
@@ -257,7 +257,7 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
           const known = isKnownTerm(cell.label, glossary);
           return (
             <td
-              key={`${wi}-${colIdx}`}
+              key={`${blockIdx}-${exIdx}-${wi}-${colIdx}`}
               style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
@@ -343,7 +343,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
       const cellKey = `${uniqueExKey}-${wi}-${colIdx}`;
       if (!cell) {
         return (
-          <td key={`${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
+          <td key={`${uniqueExKey}-${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
               <span style={{ fontSize: 11, color: "#d1d5db" }}>–</span>
               <WeightDropdown value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
@@ -356,7 +356,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
       const isSkip = cell.type === "skip";
       const known = isKnownTerm(cell.label, glossary);
       return (
-        <td key={`${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
+        <td key={`${uniqueExKey}-${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
             {isSkip ? (
               <span style={{ fontSize: 11, color: "#d1d5db" }}>X</span>
