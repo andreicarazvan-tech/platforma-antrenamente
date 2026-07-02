@@ -86,9 +86,11 @@ function useStorage(key, initial) {
   return [value, update, loaded];
 }
 
-function WeightDropdown({ value, onChange }) {
+function WeightDropdown({ value, onChange, cellKey }) {
   return (
     <select
+      key={cellKey}
+      defaultValue={value || ""}
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       style={{
@@ -246,7 +248,7 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
                   <span style={{ fontSize: 11, color: "#d1d5db" }}>–</span>
-                  <WeightDropdown key={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+                  <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
                 </div>
               </td>
             );
@@ -285,7 +287,7 @@ function ExerciseRow({ exercise, exIdx, blockIdx, weights, onWeightChange, onTer
                   </span>
                 )}
                 {!isTerm && !isSkip && (
-                  <WeightDropdown key={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+                  <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
                 )}
               </div>
             </td>
@@ -346,7 +348,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
           <td key={`${uniqueExKey}-${wi}-${colIdx}`} style={{ padding: "8px 4px", minWidth: 64, textAlign: "center", borderLeft: colIdx === 0 ? "2px solid #f0f0f0" : "none" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
               <span style={{ fontSize: 11, color: "#d1d5db" }}>–</span>
-              <WeightDropdown key={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+              <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
             </div>
           </td>
         );
@@ -370,7 +372,7 @@ function DayBlock({ block, blockIdx, weights, onWeightChange, onTermClick, gloss
               </span>
             )}
             {!isTerm && !isSkip && (
-              <WeightDropdown key={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
+              <WeightDropdown key={cellKey} cellKey={cellKey} value={weights?.[cellKey]} onChange={(v) => onWeightChange(cellKey, v)} />
             )}
           </div>
         </td>
